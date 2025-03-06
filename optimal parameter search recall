@@ -1,0 +1,170 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import AdaBoostClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import RandomizedSearchCV
+from scipy.stats import uniform as sp_randFloat
+from scipy.stats import randint as sp_randInt
+
+# Load data
+
+data = pd.read_excel('antifungal_less_than_DP25.xlsx')
+X = data.drop(columns=['MIC_64'])
+Y = data['MIC_64']
+
+# Standardize data
+sc = StandardScaler()
+X_scaled = sc.fit_transform(X)
+X_scaled = pd.DataFrame(X_scaled, columns = X.columns, index = X.index.values.tolist())
+X = X_scaled.to_numpy()
+
+# Split data
+X_train, X_test, Y_train, Y_test = train_test_split(X_scaled, Y, test_size=0.3, random_state=0, stratify=Y)
+
+
+# Define classifiers and their parameters
+parameters = {'n_estimators': sp_randInt(1,300),
+              'min_samples_split': sp_randInt(2,10),
+              'min_samples_leaf': sp_randInt(1,10),
+              'class_weight': ['balanced', 'balanced_subsample'],
+              'max_features': ['log2', 'sqrt'],
+              'max_depth': sp_randInt(1,10) or None,
+              'criterion': ['entropy', 'gini', 'log_loss']
+              }
+print("Random Forest Classifier")
+
+for run in range(1):
+    grid_search = RandomizedSearchCV(estimator=RandomForestClassifier(bootstrap=True),
+                                   param_distributions=parameters,
+                                   scoring ="recall",
+                                   cv=2,
+                                   n_iter= 100,
+                                   n_jobs=-1)
+
+    grid_search.fit(X_train, Y_train)
+    best_recall = grid_search.best_score_
+    best_parameters = grid_search.best_params_
+    print(best_recall)
+    print(best_parameters)
+
+
+print("\n")
+
+print("SVC")
+for run in range(1):
+    parameters = {'gamma': sp_randFloat(),
+                      'C': sp_randFloat(),
+                      'class_weight': ['None', 'balanced'],
+                      'kernel': ['rbf', 'sigmoid', 'linear', 'poly']}
+    grid_search = RandomizedSearchCV(estimator= SVC(random_state=0, probability=True),
+                                   param_distributions=parameters,
+                                   scoring = 'recall',
+                                   cv = 2,
+                                   n_iter= 100,
+                                   n_jobs= -1)
+    grid_search.fit(X_train, Y_train)
+    best_recall = grid_search.best_score_
+    best_parameters = grid_search.best_params_
+    print(best_recall)
+    print(best_parameters)
+print("\n")
+
+print("Logistic Regression")
+for run in range(1):
+    parameters = {'C': sp_randFloat(),
+                  'max_iter': sp_randInt(1,4001),
+                  'class_weight': ['None', 'balanced']}
+    grid_search = RandomizedSearchCV(estimator= LogisticRegression(random_state=0),
+                               param_distributions=parameters,
+                               scoring = 'recall',
+                               cv = 2,
+                               n_iter= 100,
+                               n_jobs=-1)
+    grid_search.fit(X_train, Y_train)
+    best_recall = grid_search.best_score_
+    best_parameters = grid_search.best_params_
+    print(best_recall)
+    print(best_parameters)
+print("\n")
+
+print("Decision Tree Classifier")
+for run in range(1):
+    parameters = {'min_samples_leaf': sp_randInt(0,10),
+                  'max_depth': sp_randInt(0,10),
+                  'max_features': ['log2', 'auto', 'sqrt'],
+                  'criterion': ['entropy', 'gini', 'log_loss'],
+                  'class_weight': ['None', 'balanced']}
+
+    grid_search = RandomizedSearchCV(estimator= DecisionTreeClassifier(random_state=0, splitter='best'),
+                               param_distributions=parameters,
+                               scoring = 'recall',
+                               cv = 2,
+                               n_iter= 100,
+                               n_jobs=-1)
+    grid_search.fit(X_train, Y_train)
+    best_f1 = grid_search.best_score_
+    best_parameters = grid_search.best_params_
+    print(best_f1)
+    print(best_parameters)
+
+print("\n")
+print("AdaBoost")
+for run in range(1):
+    parameters = {'n_estimators': sp_randInt(0,100),
+                  'learning_rate': sp_randFloat(),
+                  'algorithm': ['SAMME', 'SAMME.R']}
+    grid_search = RandomizedSearchCV(estimator= AdaBoostClassifier(random_state=0),
+                               param_distributions=parameters,
+                               scoring = 'recall',
+                               cv = 2,
+                               n_iter= 100,
+                               n_jobs=-1)
+    grid_search.fit(X_train, Y_train)
+    best_recall = grid_search.best_score_
+    best_parameters = grid_search.best_params_
+    print(best_recall)
+    print(best_parameters)
+
+print("\n")
+print("Gaussian Naive Bayes")
+for run in range(1):
+    parameters = {'var_smoothing': sp_randFloat()}
+    grid_search = RandomizedSearchCV(estimator=GaussianNB(),
+                               param_distributions=parameters,
+                               scoring='recall',
+                               cv=2,
+                               n_iter=100,
+                               n_jobs=-1)
+
+    grid_search.fit(X_train, Y_train)
+    best_recall = grid_search.best_score_
+    best_parameters = grid_search.best_params_
+    print(best_recall)
+    print(best_parameters)
+
+print("\n")
+print("KNeighbors Classifier")
+
+for run in range(1):
+    parameters ={'leaf_size': sp_randInt(1,200),
+                 'n_neighbors': sp_randInt(1,50),
+                 'p': sp_randInt(1,10),
+                 'weights': ['uniform', 'distance'],
+                 'algorithm': ['kd_tree', 'auto', 'brute', 'ball_tree']}
+    grid_search = RandomizedSearchCV(KNeighborsClassifier(),
+                               param_distributions=parameters,
+                               scoring = 'recall',
+                               cv = 2,
+                               n_iter=100,
+                               n_jobs=-1)
+    grid_search.fit(X_train, Y_train)
+    best_recall = grid_search.best_score_
+    best_parameters = grid_search.best_params_
+    print(best_recall)
+    print(best_parameters)
