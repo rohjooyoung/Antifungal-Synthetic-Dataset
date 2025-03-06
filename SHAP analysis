@@ -1,0 +1,181 @@
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+import matplotlib.pyplot as plt
+import shap
+from matplotlib.ticker import FormatStrFormatter
+import pandas as pd
+from sklearn.metrics import confusion_matrix, classification_report, precision_recall_curve, auc
+
+rfc = RandomForestClassifier(class_weight='balanced', max_depth=8,  max_features='sqrt', min_samples_leaf=9,
+                       min_samples_split=8, n_estimators=63, random_state=0)
+
+data = pd.read_excel('antifungal_less_than_DP25.xlsx')
+X = data.drop(columns=['MIC_64'])
+Y = data['MIC_64']
+
+#data = pd.read_excel('antifungal_dataset_simple.xlsx')
+#X = data.drop(columns=['MIC_64'])
+#Y = data['MIC_64']
+print(X)
+print(Y)
+
+# Standardize data
+sc = StandardScaler()
+X_scaled = sc.fit_transform(X)
+X_scaled = pd.DataFrame(X_scaled, columns = X.columns, index = X.index.values.tolist())
+
+pearson = X_scaled.corr("pearson")
+
+pd.set_option('display.max_columns', None)
+print(pearson)
+
+# Split data
+X_train, X_test, Y_train, Y_test = train_test_split(X_scaled, Y, test_size=0.3, random_state=0, stratify= Y)
+
+rfc = rfc.fit(X_train,Y_train.values.ravel())
+Y_pred = rfc.predict(X_test)
+cm = confusion_matrix(Y_test, Y_pred)
+TN, FP, FN, TP = cm.ravel()
+print("True Positive: ", TP)
+print("True Negative: ", TN)
+print("False Positive: ", FP)
+print("False Negative: ", FN)
+report = classification_report(Y_test, Y_pred, target_names=["Bad", "Good"])
+
+shap.initjs()
+
+print(X.columns)
+explainer = shap.TreeExplainer(rfc, X_scaled)
+shap_values = explainer.shap_values(X_scaled, check_additivity=False)
+print(shap_values)
+
+
+mean_abs_shap_values = np.mean(np.abs(shap_values), axis=0)
+mean_shap_values_df_bad = pd.DataFrame({'Feature': X.columns, 'MeanAbsSHAP_Bad': mean_abs_shap_values[:,0]})
+
+# Sort values in descending order
+mean_shap_values_df_bad = mean_shap_values_df_bad.sort_values(by='MeanAbsSHAP_Bad', ascending=False)
+# Create bar plot
+plt.figure(figsize=(70, 60))
+plt.bar(mean_shap_values_df_bad['Feature'], mean_shap_values_df_bad['MeanAbsSHAP_Bad'], color='red')
+plt.ylabel('Mean |SHAP value|', size = 80)
+plt.xlabel('Feature', size = 80)
+plt.yticks(size = 70)
+plt.xticks(rotation = 20, ha = "right", size = 60)
+plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%.3f'))
+plt.title('Feature Importance - Mean Absolute SHAP Values (bad)', size = 100)
+ax = plt.gca()
+ax.spines['top'].set_edgecolor('black')
+ax.spines['top'].set_linewidth(4)
+ax.spines['right'].set_edgecolor('black')
+ax.spines['right'].set_linewidth(4)
+ax.spines['bottom'].set_edgecolor('black')
+ax.spines['bottom'].set_linewidth(4)
+ax.spines['left'].set_edgecolor('black')
+ax.spines['left'].set_linewidth(4)
+# Adjust layout and show plot
+plt.autoscale()
+plt.show()
+
+# Top ten most important features that influence SHAP for MIC64 = Cat1
+index_of_cLogP_predicted = data.columns.get_loc('cLogP_predicted')
+index_of_cyclic_group = data.columns.get_loc('hydrophobic_group_is_cyclic')
+index_of_DP = data.columns.get_loc('DP')
+index_of_hydrophilic = data.columns.get_loc('Total_hydrophilic_composition')
+index_of_hydrophobic = data.columns.get_loc('Total_hydrophobic_composition')
+index_of_cationic = data.columns.get_loc('Total_cationic_composition')
+index_of_DTPA = data.columns.get_loc('DTPA_RAFT')
+
+Y_hydrophobic = shap_values[:,index_of_hydrophobic][:,0]
+X_hydrophobic = X['Total_hydrophobic_composition']
+
+Y_hydrophilic = shap_values[:,index_of_hydrophilic][:,0]
+X_hydrophilic = X['Total_hydrophilic_composition']
+
+Y_DTPA = shap_values[:,index_of_DTPA][:,0]
+X_DTPA = X['DTPA_RAFT']
+
+# Most important feature DP
+Y_cationic = shap_values[:,index_of_cationic][:,0]
+X_cationic = X['Total_cationic_composition']
+
+#plt.scatter(X_DP, Y_DP, color = 'red', s = 10)
+#plt.xlabel('DP')
+#plt.ylabel('SHAP value (Bad)')
+#plt.title('The relationship between SHAP value (Bad) and DP')
+
+# 2nd important feature hydrophilic composition
+#plt.scatter(X_hydrophilic_composition, Y_hydrophilic_composition, color = 'red', s = 10)
+#plt.xlabel('Hydrophilic composition')
+#plt.ylabel('SHAP value (Bad)')
+#plt.title('The relationship between SHAP value (Bad) and hydrophilic composition')
+
+Y_DP = shap_values[:,index_of_DP][:,0]
+X_DP = X['DP']
+
+Y_cyclic = shap_values[:,index_of_cyclic_group][:,0]
+X_cyclic = X['hydrophobic_group_is_cyclic']
+
+# 3rd important feature cLogP
+
+Y_cLogP_predicted_bad = shap_values[:,index_of_cLogP_predicted][:,0]
+X_cLogP_predicted = X['cLogP_predicted']
+
+
+fig, axes = plt.subplots(nrows=2, ncols=3, figsize=(12, 9))
+# plot on each of the subplots
+
+axes[0, 0].scatter(X_hydrophilic, Y_hydrophilic,color = 'red', s=10)
+axes[0, 0].set_xlabel('Hydrophilic_composition',fontsize=15)
+axes[0, 0].axhline(y=0, color='k', linestyle='dotted')
+axes[0, 0].axvline(x=0.3, color='k', linestyle='dotted')
+axes[0, 0].yaxis.set_major_formatter(plt.FuncFormatter(lambda val, pos: f'{val:.3f}'))
+axes[0, 0].tick_params(axis='y', labelsize=12)
+axes[0, 0].tick_params(axis='x', labelsize=12)
+
+axes[0, 1].scatter(X_cLogP_predicted, Y_cLogP_predicted_bad,color = 'red', s=10)
+axes[0, 1].set_xlabel('cLogP_predicted',fontsize=15)
+axes[0, 1].axhline(y=0, color='k', linestyle='dotted')
+axes[0, 1].axvline(x=0, color='k', linestyle='dotted')
+axes[0, 1].yaxis.set_major_formatter(plt.FuncFormatter(lambda val, pos: f'{val:.3f}'))
+axes[0, 1].tick_params(axis='y', labelsize=12)
+axes[0, 1].tick_params(axis='x', labelsize=12)
+
+axes[0, 2].scatter(X_hydrophobic, Y_hydrophobic,color = 'red', s=10)
+axes[0, 2].set_xlabel('Total_hydrophobic_composition',fontsize=15)
+axes[0, 2].axhline(y=0, color='k', linestyle='dotted')
+axes[0, 2].axvline(x=0.2, color='k', linestyle='dotted')
+axes[0, 2].yaxis.set_major_formatter(plt.FuncFormatter(lambda val, pos: f'{val:.3f}'))
+axes[0, 2].tick_params(axis='y', labelsize=12)
+axes[0, 2].tick_params(axis='x', labelsize=12)
+
+axes[1, 0].scatter(X_DP, Y_DP,color = 'red', s=10)
+axes[1, 0].set_xlabel('DP',fontsize=15)
+axes[1, 0].axhline(y=0, color='k', linestyle='dotted')
+axes[1, 0].axvline(x=18, color='k', linestyle='dotted')
+axes[1, 0].yaxis.set_major_formatter(plt.FuncFormatter(lambda val, pos: f'{val:.3f}'))
+axes[1, 0].tick_params(axis='y', labelsize=12)
+axes[1, 0].tick_params(axis='x', labelsize=12)
+
+axes[1, 1].scatter(X_cationic, Y_cationic,color = 'red', s=10)
+axes[1, 1].set_xlabel('Total_cationic_composition',fontsize=15)
+axes[1, 1].axhline(y=0, color='k', linestyle='dotted')
+axes[1, 1].axvline(x=0.5, color='k', linestyle='dotted')
+axes[1, 1].yaxis.set_major_formatter(plt.FuncFormatter(lambda val, pos: f'{val:.3f}'))
+axes[1, 1].tick_params(axis='y', labelsize=12)
+axes[1, 1].tick_params(axis='x', labelsize=12)
+
+axes[1, 2].scatter(X_DTPA, Y_DTPA,color = 'red', s=10)
+axes[1, 2].set_xlabel('DTPA_RAFT',fontsize=15)
+axes[1, 2].axhline(y=0, color='k', linestyle='dotted')
+axes[1, 2].yaxis.set_major_formatter(plt.FuncFormatter(lambda val, pos: f'{val:.3f}'))
+axes[1, 2].tick_params(axis='y', labelsize=12)
+axes[1, 2].tick_params(axis='x', labelsize=12)
+
+# set overall title and adjust subplot spacing
+plt.subplots_adjust(hspace=0.4, wspace=0.3)
+#fig.text(0.5, 0.03, 'feature values', ha'center', va='center', fontsize=14)
+fig.text(0.03, 0.5, 'SHAP values Class0: MIC>64', ha='center', va='center', rotation='vertical', fontsize=20)
+plt.show()
