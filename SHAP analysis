@@ -58,14 +58,15 @@ mean_shap_values_df_bad = pd.DataFrame({'Feature': X.columns, 'MeanAbsSHAP_Bad':
 # Sort values in descending order
 mean_shap_values_df_bad = mean_shap_values_df_bad.sort_values(by='MeanAbsSHAP_Bad', ascending=False)
 # Create bar plot
+plt.rcParams['font.family'] = 'Times New Roman'
 plt.figure(figsize=(70, 60))
 plt.bar(mean_shap_values_df_bad['Feature'], mean_shap_values_df_bad['MeanAbsSHAP_Bad'], color='red')
-plt.ylabel('Mean |SHAP value|', size = 80)
-plt.xlabel('Feature', size = 80)
-plt.yticks(size = 70)
-plt.xticks(rotation = 20, ha = "right", size = 60)
+plt.ylabel('Mean |SHAP value|', size = 120)
+plt.xlabel('Feature', size = 120)
+plt.yticks(size = 80)
+plt.xticks(rotation = 15, ha = "right", size = 75)
 plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%.3f'))
-plt.title('Feature Importance - Mean Absolute SHAP Values (bad)', size = 100)
+plt.title('Feature Importance - Mean Absolute SHAP Values', size = 120)
 ax = plt.gca()
 ax.spines['top'].set_edgecolor('black')
 ax.spines['top'].set_linewidth(4)
@@ -76,17 +77,16 @@ ax.spines['bottom'].set_linewidth(4)
 ax.spines['left'].set_edgecolor('black')
 ax.spines['left'].set_linewidth(4)
 # Adjust layout and show plot
-plt.autoscale()
 plt.show()
 
 # Top ten most important features that influence SHAP for MIC64 = Cat1
 index_of_cLogP_predicted = data.columns.get_loc('cLogP_predicted')
-index_of_cyclic_group = data.columns.get_loc('hydrophobic_group_is_cyclic')
+index_of_cyclic_group = data.columns.get_loc('Hydrophobic_group_is_cyclic')
 index_of_DP = data.columns.get_loc('DP')
 index_of_hydrophilic = data.columns.get_loc('Total_hydrophilic_composition')
 index_of_hydrophobic = data.columns.get_loc('Total_hydrophobic_composition')
 index_of_cationic = data.columns.get_loc('Total_cationic_composition')
-index_of_DTPA = data.columns.get_loc('DTPA_RAFT')
+index_of_DTPA = data.columns.get_loc('dodecyl_end_group')
 
 Y_hydrophobic = shap_values[:,index_of_hydrophobic][:,0]
 X_hydrophobic = X['Total_hydrophobic_composition']
@@ -95,7 +95,7 @@ Y_hydrophilic = shap_values[:,index_of_hydrophilic][:,0]
 X_hydrophilic = X['Total_hydrophilic_composition']
 
 Y_DTPA = shap_values[:,index_of_DTPA][:,0]
-X_DTPA = X['DTPA_RAFT']
+X_DTPA = X['dodecyl_end_group']
 
 # Most important feature DP
 Y_cationic = shap_values[:,index_of_cationic][:,0]
@@ -116,7 +116,7 @@ Y_DP = shap_values[:,index_of_DP][:,0]
 X_DP = X['DP']
 
 Y_cyclic = shap_values[:,index_of_cyclic_group][:,0]
-X_cyclic = X['hydrophobic_group_is_cyclic']
+X_cyclic = X['Hydrophobic_group_is_cyclic']
 
 # 3rd important feature cLogP
 
@@ -168,13 +168,14 @@ axes[1, 1].tick_params(axis='y', labelsize=12)
 axes[1, 1].tick_params(axis='x', labelsize=12)
 
 axes[1, 2].scatter(X_DTPA, Y_DTPA,color = 'red', s=10)
-axes[1, 2].set_xlabel('DTPA_RAFT',fontsize=15)
+axes[1, 2].set_xlabel('dodecyl_end_group',fontsize=15)
 axes[1, 2].axhline(y=0, color='k', linestyle='dotted')
 axes[1, 2].yaxis.set_major_formatter(plt.FuncFormatter(lambda val, pos: f'{val:.3f}'))
 axes[1, 2].tick_params(axis='y', labelsize=12)
 axes[1, 2].tick_params(axis='x', labelsize=12)
 
 # set overall title and adjust subplot spacing
+plt.rcParams['font.family'] = 'Times New Roman'
 plt.subplots_adjust(hspace=0.4, wspace=0.3)
 #fig.text(0.5, 0.03, 'feature values', ha'center', va='center', fontsize=14)
 fig.text(0.03, 0.5, 'SHAP values Class0: MIC>64', ha='center', va='center', rotation='vertical', fontsize=20)
