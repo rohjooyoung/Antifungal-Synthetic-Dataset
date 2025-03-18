@@ -91,11 +91,12 @@ for clf_name, clf_data in classifiers.items():
         y_prob = model.predict_proba(clf_data['X_test'])[:, 1]
         precision, recall, _ = precision_recall_curve(Y_test, y_prob)
         pr_auc = auc(recall, precision)
+        plt.rcParams['font.family'] = 'Times New Roman'
         # Plot precision-recall curve
         plt.figure()
         plt.plot(recall, precision, marker='o', label=f'{clf_name} (PR AUC = {pr_auc:.2f})')
-        plt.xlabel('Recall')
-        plt.ylabel('Precision')
+        plt.xlabel('Recall', fontsize=18)
+        plt.ylabel('Precision', fontsize=18)
         plt.title(f'{clf_name} Precision-Recall Curve')
         plt.legend()
         plt.show()
