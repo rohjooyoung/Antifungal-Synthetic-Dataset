@@ -62,11 +62,9 @@ plt.rcParams['font.family'] = 'Times New Roman'
 plt.figure(figsize=(70, 60))
 plt.bar(mean_shap_values_df_bad['Feature'], mean_shap_values_df_bad['MeanAbsSHAP_Bad'], color='red')
 plt.ylabel('Mean |SHAP value|', size = 120)
-plt.xlabel('Feature', size = 120)
 plt.yticks(size = 80)
-plt.xticks(rotation = 15, ha = "right", size = 75)
+plt.xticks(rotation = 20, ha = "right", size = 80)
 plt.gca().yaxis.set_major_formatter(FormatStrFormatter('%.3f'))
-plt.title('Feature Importance - Mean Absolute SHAP Values', size = 120)
 ax = plt.gca()
 ax.spines['top'].set_edgecolor('black')
 ax.spines['top'].set_linewidth(4)
@@ -78,28 +76,28 @@ ax.spines['left'].set_edgecolor('black')
 ax.spines['left'].set_linewidth(4)
 # Adjust layout and show plot
 plt.show()
+print("Mean abs values: ", mean_abs_shap_values)
 
 # Top ten most important features that influence SHAP for MIC64 = Cat1
 index_of_cLogP_predicted = data.columns.get_loc('cLogP_predicted')
-index_of_cyclic_group = data.columns.get_loc('Hydrophobic_group_is_cyclic')
 index_of_DP = data.columns.get_loc('DP')
-index_of_hydrophilic = data.columns.get_loc('Total_hydrophilic_composition')
-index_of_hydrophobic = data.columns.get_loc('Total_hydrophobic_composition')
-index_of_cationic = data.columns.get_loc('Total_cationic_composition')
-index_of_DTPA = data.columns.get_loc('dodecyl_end_group')
+index_of_hydrophilic = data.columns.get_loc('Hydrophilic_composition')
+index_of_hydrophobic = data.columns.get_loc('Hydrophobic_composition')
+index_of_cationic = data.columns.get_loc('Cationic_composition')
+index_of_DTPA = data.columns.get_loc('Dodecyl_end_group')
 
 Y_hydrophobic = shap_values[:,index_of_hydrophobic][:,0]
-X_hydrophobic = X['Total_hydrophobic_composition']
+X_hydrophobic = X['Hydrophobic_composition']
 
 Y_hydrophilic = shap_values[:,index_of_hydrophilic][:,0]
-X_hydrophilic = X['Total_hydrophilic_composition']
+X_hydrophilic = X['Hydrophilic_composition']
 
 Y_DTPA = shap_values[:,index_of_DTPA][:,0]
-X_DTPA = X['dodecyl_end_group']
+X_DTPA = X['Dodecyl_end_group']
 
 # Most important feature DP
 Y_cationic = shap_values[:,index_of_cationic][:,0]
-X_cationic = X['Total_cationic_composition']
+X_cationic = X['Cationic_composition']
 
 #plt.scatter(X_DP, Y_DP, color = 'red', s = 10)
 #plt.xlabel('DP')
@@ -115,9 +113,6 @@ X_cationic = X['Total_cationic_composition']
 Y_DP = shap_values[:,index_of_DP][:,0]
 X_DP = X['DP']
 
-Y_cyclic = shap_values[:,index_of_cyclic_group][:,0]
-X_cyclic = X['Hydrophobic_group_is_cyclic']
-
 # 3rd important feature cLogP
 
 Y_cLogP_predicted_bad = shap_values[:,index_of_cLogP_predicted][:,0]
@@ -132,51 +127,52 @@ axes[0, 0].set_xlabel('Hydrophilic_composition',fontsize=15)
 axes[0, 0].axhline(y=0, color='k', linestyle='dotted')
 axes[0, 0].axvline(x=0.3, color='k', linestyle='dotted')
 axes[0, 0].yaxis.set_major_formatter(plt.FuncFormatter(lambda val, pos: f'{val:.3f}'))
-axes[0, 0].tick_params(axis='y', labelsize=12)
-axes[0, 0].tick_params(axis='x', labelsize=12)
+axes[0, 0].tick_params(axis='y', labelsize=16)
+axes[0, 0].tick_params(axis='x', labelsize=16)
 
 axes[0, 1].scatter(X_cLogP_predicted, Y_cLogP_predicted_bad,color = 'red', s=10)
 axes[0, 1].set_xlabel('cLogP_predicted',fontsize=15)
 axes[0, 1].axhline(y=0, color='k', linestyle='dotted')
 axes[0, 1].axvline(x=0, color='k', linestyle='dotted')
 axes[0, 1].yaxis.set_major_formatter(plt.FuncFormatter(lambda val, pos: f'{val:.3f}'))
-axes[0, 1].tick_params(axis='y', labelsize=12)
-axes[0, 1].tick_params(axis='x', labelsize=12)
+axes[0, 1].tick_params(axis='y', labelsize=16)
+axes[0, 1].tick_params(axis='x', labelsize=16)
 
 axes[0, 2].scatter(X_hydrophobic, Y_hydrophobic,color = 'red', s=10)
-axes[0, 2].set_xlabel('Total_hydrophobic_composition',fontsize=15)
+axes[0, 2].set_xlabel('Hydrophobic_composition',fontsize=15)
 axes[0, 2].axhline(y=0, color='k', linestyle='dotted')
 axes[0, 2].axvline(x=0.2, color='k', linestyle='dotted')
 axes[0, 2].yaxis.set_major_formatter(plt.FuncFormatter(lambda val, pos: f'{val:.3f}'))
-axes[0, 2].tick_params(axis='y', labelsize=12)
-axes[0, 2].tick_params(axis='x', labelsize=12)
+axes[0, 2].tick_params(axis='y', labelsize=16)
+axes[0, 2].tick_params(axis='x', labelsize=16)
 
 axes[1, 0].scatter(X_DP, Y_DP,color = 'red', s=10)
 axes[1, 0].set_xlabel('DP',fontsize=15)
 axes[1, 0].axhline(y=0, color='k', linestyle='dotted')
 axes[1, 0].axvline(x=18, color='k', linestyle='dotted')
 axes[1, 0].yaxis.set_major_formatter(plt.FuncFormatter(lambda val, pos: f'{val:.3f}'))
-axes[1, 0].tick_params(axis='y', labelsize=12)
-axes[1, 0].tick_params(axis='x', labelsize=12)
+axes[1, 0].tick_params(axis='y', labelsize=16)
+axes[1, 0].tick_params(axis='x', labelsize=16)
 
 axes[1, 1].scatter(X_cationic, Y_cationic,color = 'red', s=10)
-axes[1, 1].set_xlabel('Total_cationic_composition',fontsize=15)
+axes[1, 1].set_xlabel('Cationic_composition',fontsize=15)
 axes[1, 1].axhline(y=0, color='k', linestyle='dotted')
 axes[1, 1].axvline(x=0.5, color='k', linestyle='dotted')
 axes[1, 1].yaxis.set_major_formatter(plt.FuncFormatter(lambda val, pos: f'{val:.3f}'))
-axes[1, 1].tick_params(axis='y', labelsize=12)
-axes[1, 1].tick_params(axis='x', labelsize=12)
+axes[1, 1].tick_params(axis='y', labelsize=16)
+axes[1, 1].tick_params(axis='x', labelsize=16)
 
 axes[1, 2].scatter(X_DTPA, Y_DTPA,color = 'red', s=10)
-axes[1, 2].set_xlabel('dodecyl_end_group',fontsize=15)
+axes[1, 2].set_xlabel('Dodecyl_end_group',fontsize=15)
 axes[1, 2].axhline(y=0, color='k', linestyle='dotted')
 axes[1, 2].yaxis.set_major_formatter(plt.FuncFormatter(lambda val, pos: f'{val:.3f}'))
-axes[1, 2].tick_params(axis='y', labelsize=12)
-axes[1, 2].tick_params(axis='x', labelsize=12)
+axes[1, 2].tick_params(axis='y', labelsize=16)
+axes[1, 2].tick_params(axis='x', labelsize=16)
 
 # set overall title and adjust subplot spacing
 plt.rcParams['font.family'] = 'Times New Roman'
 plt.subplots_adjust(hspace=0.4, wspace=0.3)
 #fig.text(0.5, 0.03, 'feature values', ha'center', va='center', fontsize=14)
-fig.text(0.03, 0.5, 'SHAP values Class0: MIC>64', ha='center', va='center', rotation='vertical', fontsize=20)
+fig.text(0.03, 0.5, 'SHAP values Class0: MIC>64', ha='center', va='center', rotation='vertical', fontsize=18)
+plt.rcParams['font.family'] = 'Times New Roman'
 plt.show()
